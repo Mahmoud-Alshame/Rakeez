@@ -1,21 +1,18 @@
-/**
- * طبقة Firebase — جاهزة للربط لاحقاً.
- *
- * 1. npm install firebase
- * 2. استبدال القيم من وحدة تحكم Firebase
- * 3. initializeApp ثم تصدير auth و db
- *
- * @see https://firebase.google.com/docs/web/setup
- */
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getAI, GoogleAIBackend } from "firebase/ai";
 
-export const firebaseConfigPlaceholder = {
-  apiKey: 'ضع_مفتاح_API_هنا',
-  authDomain: 'your-project.firebaseapp.com',
-  projectId: 'your-project-id',
-  storageBucket: 'your-project.appspot.com',
-  messagingSenderId: '000000000000',
-  appId: '1:000000000000:web:xxxxxxxx',
-}
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
 
-/** يُغيّر إلى true بعد تهيئة Firebase فعلياً */
-export const firebaseReady = false
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const ai = getAI(app, { backend: new GoogleAIBackend() });

@@ -1,9 +1,5 @@
 /**
- * أنواع الحسابات — مطابقة لفاعلي Use Case + المدير (يُعيَّن إدارياً وليس عبر شاشة التسجيل).
- *
- * - startup = الشركة الناشئة: إدارة المناقصات، إنشاء مناقصة، استعراض العروض، اختيار فائز، إغلاق…
- * - supplier = المورد / شركة الخدمات: استعراض المناقصات المتاحة، تقديم عرض، إدارة العروض، الفوز، تبليغ…
- * - admin = المدير: إدارة الحسابات، النزاعات، التقارير (لا يظهر كخيار في نموذج الدخول التجريدي).
+ * أنواع الحسابات — admin | supplier | startup
  */
 export const USER_ROLES = {
   ADMIN: 'admin',
@@ -11,35 +7,71 @@ export const USER_ROLES = {
   STARTUP: 'startup',
 }
 
-/** تسميات عربية لعرضها في الواجهة */
 export const ROLE_LABELS_AR = {
   [USER_ROLES.ADMIN]: 'مدير النظام',
   [USER_ROLES.SUPPLIER]: 'مورد / شركة خدمات',
   [USER_ROLES.STARTUP]: 'شركة ناشئة',
 }
 
-/**
- * صلاحيات المسارات — محاذاة مع مخطط حالات الاستخدام.
- * المدير يُفترض أنه يرى كل الوظائف للإشراف (تعميم UML شائع)، ويُعرَّف خارج شاشة الدخول العامة.
- */
+/** صلاحيات المسارات — RBAC */
 export const PERMISSIONS = {
+  LANDING: [USER_ROLES.ADMIN, USER_ROLES.SUPPLIER, USER_ROLES.STARTUP],
   DASHBOARD: [USER_ROLES.ADMIN, USER_ROLES.SUPPLIER, USER_ROLES.STARTUP],
+  PROFILE: [USER_ROLES.SUPPLIER, USER_ROLES.STARTUP],
   USER_MANAGEMENT: [USER_ROLES.ADMIN],
-  TENDER_MANAGEMENT: [USER_ROLES.ADMIN, USER_ROLES.STARTUP],
-  BIDDING_MARKET: [USER_ROLES.ADMIN, USER_ROLES.SUPPLIER],
-  MY_BIDS: [USER_ROLES.ADMIN, USER_ROLES.SUPPLIER],
-  COMPARISON: [USER_ROLES.ADMIN, USER_ROLES.STARTUP],
-  WON_TENDERS: [USER_ROLES.ADMIN, USER_ROLES.SUPPLIER],
-  DISPUTES_REPORTS: [USER_ROLES.ADMIN, USER_ROLES.SUPPLIER, USER_ROLES.STARTUP],
+  ADMIN_TENDERS: [USER_ROLES.ADMIN],
+  CATEGORIES: [USER_ROLES.ADMIN],
+  STARTUP_TENDERS: [USER_ROLES.STARTUP],
+  COMPARISON: [USER_ROLES.STARTUP],
+  BIDDING_MARKET: [USER_ROLES.SUPPLIER],
+  MY_BIDS: [USER_ROLES.SUPPLIER],
+  WON_TENDERS: [USER_ROLES.SUPPLIER],
+  MESSAGES: [USER_ROLES.SUPPLIER, USER_ROLES.STARTUP],
+  DISPUTES: [USER_ROLES.ADMIN],
 }
 
-/**
- * التحقق من أن الدور الحالي يملك صلاحية محددة.
- * @param {string} role
- * @param {keyof typeof PERMISSIONS} permissionKey
- */
 export function roleCan(role, permissionKey) {
   const allowed = PERMISSIONS[permissionKey]
   if (!allowed) return false
   return allowed.includes(role)
+}
+
+/** مسارات لوحة التحكم حسب الدور — للتحقق في RequireRole */
+export const ROLE_ROUTE_PREFIX = {
+  [USER_ROLES.ADMIN]: ['/dashboard', '/users', '/admin'],
+  [USER_ROLES.STARTUP]: ['/dashboard', '/profile', '/tenders', '/compare', '/messages'],
+  [USER_ROLES.SUPPLIER]: ['/dashboard', '/profile', '/bidding', '/my-bids', '/won-tenders', '/messages'],
+}
+
+/** مسارات محمية صريحة لكل دور — تتجاوز أخطاء بادئات المسارات المتشابهة */
+export const ROLE_ALLOWED_PATHS = {
+  [USER_ROLES.ADMIN]: [
+    '/dashboard',
+    '/users',
+    '/admin/categories',
+    '/admin/tenders',
+    '/admin/disputes',
+  ],
+  [USER_ROLES.STARTUP]: ['/dashboard', '/profile', '/tenders', '/compare', '/messages'],
+  [USER_ROLES.SUPPLIER]: [
+    '/dashboard',
+    '/profile',
+    '/bidding',
+    '/my-bids',
+    '/won-tenders',
+    '/messages',
+  ],
+}
+
+function normalizePathname(pathname) {
+  const base = (pathname || '/').split('?')[0].split('#')[0]
+  if (base.length > 1 && base.endsWith('/')) return base.slice(0, -1)
+  return base || '/'
+}
+
+export function roleMayAccessPath(role, pathname) {
+  if (!role) return false
+  const path = normalizePathname(pathname)
+  const allowed = ROLE_ALLOWED_PATHS[role] || []
+  return allowed.some((p) => path === p || path.startsWith(`${p}/`))
 }

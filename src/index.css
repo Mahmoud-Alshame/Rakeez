@@ -8,6 +8,15 @@
     @apply antialiased;
   }
   body {
-    @apply bg-surface text-stone-900 font-sans text-sm;
+    @apply bg-surface text-stone-900 font-sans text-sm transition-colors duration-300;
+  }
+  html.dark body {
+    @apply bg-stone-950 text-stone-100;
+  }
+  html.dark .bg-surface {
+    @apply bg-stone-950;
+  }
+  html.dark .bg-surface-muted {
+    @apply bg-stone-800/60;
   }
 }
