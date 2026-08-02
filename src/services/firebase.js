@@ -16,3 +16,5 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const ai = getAI(app, { backend: new GoogleAIBackend() });
+
+export const firebaseReady = Promise.resolve(app);
