@@ -1,5 +1,5 @@
 /** بيانات دخول المدير الثابتة — لاحقاً: Custom Claims في Firebase */
-export const ADMIN_EMAIL = 'admin@platform.com'
+export const ADMIN_EMAIL = 'adminmahmoud360@gmail.com'
 
 export const ACCOUNT_STATUS = {
   PENDING: 'pending',
