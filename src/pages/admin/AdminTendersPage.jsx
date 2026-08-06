@@ -62,7 +62,7 @@ export default function AdminTendersPage() {
 
         {error ? <Alert variant="error">{error}</Alert> : null}
 
-        <div className="mt-6 overflow-x-auto rounded-xl border border-stone-200 bg-white shadow-sm">
+        <div className="mt-6 overflow-x-auto rounded-xl border border-stone-200 bg-white shadow-sm  dark:border-stone-700 dark:bg-stone-900">
           <table className="w-full min-w-[800px] text-right text-sm">
             <thead className="border-b border-stone-100 bg-stone-50">
               <tr>
