@@ -57,14 +57,14 @@ export default function AdminTendersPage() {
   return (
     <RequirePermission permission="ADMIN_TENDERS">
       <PageWrap>
-        <h1 className="text-2xl font-bold text-stone-900">إدارة الإعلانات والمناقصات</h1>
+        <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100">إدارة الإعلانات والمناقصات</h1>
         <p className="mt-1 text-sm text-stone-500">عرض كل المناقصات المنشورة وإزالتها مع توثيق السبب.</p>
 
         {error ? <Alert variant="error">{error}</Alert> : null}
 
         <div className="mt-6 overflow-x-auto rounded-xl border border-stone-200 bg-white shadow-sm  dark:border-stone-700 dark:bg-stone-900">
           <table className="w-full min-w-[800px] text-right text-sm">
-            <thead className="border-b border-stone-100 bg-stone-50">
+            <thead className="border-b border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-800/50">
               <tr>
                 <th className="px-4 py-3 font-semibold">العنوان</th>
                 <th className="px-4 py-3 font-semibold">الناشئة</th>
