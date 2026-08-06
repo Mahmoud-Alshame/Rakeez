@@ -58,7 +58,7 @@ export default function AdminTendersPage() {
     <RequirePermission permission="ADMIN_TENDERS">
       <PageWrap>
         <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100">إدارة الإعلانات والمناقصات</h1>
-        <p className="mt-1 text-sm text-stone-500">عرض كل المناقصات المنشورة وإزالتها مع توثيق السبب.</p>
+        <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">عرض كل المناقصات المنشورة وإزالتها مع توثيق السبب.</p>
 
         {error ? <Alert variant="error">{error}</Alert> : null}
 
@@ -82,9 +82,9 @@ export default function AdminTendersPage() {
                 </tr>
               ) : (
                 tenders.map((t) => (
-                  <tr key={t.id} className="border-b border-stone-50 last:border-0">
+                  <tr key={t.id} className="border-b border-stone-50 last:border-0 dark:border-stone-800">
                     <td className="px-4 py-3 font-medium">{t.title}</td>
-                    <td className="px-4 py-3 text-stone-600">{getOwnerName(t.ownerId)}</td>
+                    <td className="px-4 py-3 text-stone-600 dark:text-stone-400">{getOwnerName(t.ownerId)}</td>
                     <td className="px-4 py-3 text-stone-600">{getCatName(t.categoryId)}</td>
                     <td className="px-4 py-3">
                       <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs">
