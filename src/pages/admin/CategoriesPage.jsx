@@ -71,7 +71,7 @@ export default function CategoriesPage() {
           </div>
         </form>
 
-        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
+        <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
           <table className="w-full min-w-[400px] text-right text-sm">
             <thead className="border-b border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-800/50">
               <tr>
