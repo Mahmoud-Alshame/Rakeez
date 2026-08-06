@@ -87,7 +87,7 @@ export default function AdminTendersPage() {
                     <td className="px-4 py-3 text-stone-600 dark:text-stone-400">{getOwnerName(t.ownerId)}</td>
                     <td className="px-4 py-3 text-stone-600">{getCatName(t.categoryId)}</td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs">
+                      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs dark:bg-slate-600">
                         {STATUS_LABELS[t.status] || t.status}
                       </span>
                       {t.removalReason ? (
