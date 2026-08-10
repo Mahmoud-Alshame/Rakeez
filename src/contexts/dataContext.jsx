@@ -21,10 +21,12 @@ import { db } from '../services/firebase'
 import { ACCOUNT_STATUS } from '../constants/auth'
 import { USER_ROLES } from '../constants/roles'
 import { conversationIdForTender } from '../services/chat'
+import { useAuth } from './authContext'
 
 const DataContext = createContext(null)
 
 export function DataProvider({ children }) {
+  const { user, initializing } = useAuth()
   const [categories, setCategories] = useState([])
   const [users, setUsers] = useState([])
   const [tenders, setTenders] = useState([])
@@ -32,6 +34,19 @@ export function DataProvider({ children }) {
   const [disputes, setDisputes] = useState([])
 
   useEffect(() => {
+    // ننتظر لحد ما authContext يتأكد من حالة تسجيل الدخول، وما نفتح
+    // أي listener إلا بعد ما يصير عندنا مستخدم مسجّل دخول فعليًا.
+    // هيك منتجنب رفض Firestore (permission-denied) بسبب فتح الـ
+    // listeners قبل ما يجهز request.auth عند Firestore.
+    if (initializing || !user) {
+      setCategories([])
+      setUsers([])
+      setTenders([])
+      setBids([])
+      setDisputes([])
+      return
+    }
+
     const unsubCategories = onSnapshot(collection(db, 'categories'), (snap) => {
       setCategories(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     })
@@ -55,7 +70,7 @@ export function DataProvider({ children }) {
       unsubBids()
       unsubDisputes()
     }
-  }, [])
+  }, [initializing, user])
 
   // ---------- categories ----------
   const addCategory = useCallback(async (name) => {
@@ -126,10 +141,6 @@ export function DataProvider({ children }) {
     await deleteDoc(doc(db, 'bids', id))
   }, [])
 
-  /**
-   * يختار الفائز: يحدّث المناقصة + كل عروضها + يكتب رسالة ترحيب بمحادثة
-   * المناقصة — كل هذا بعملية واحدة ذرية (batch write).
-   */
   const selectWinner = useCallback(
     async (tenderId, bidId) => {
       const batch = writeBatch(db)
@@ -231,10 +242,6 @@ export function DataProvider({ children }) {
     [tenders, bids],
   )
 
-  /**
-   * قائمة المحادثات مُشتقة من tenders/bids (بدون lastMessage حي هنا —
-   * MessagesPage تستمع لرسائل كل محادثة مباشرة عبر chat.js عند فتحها).
-   */
   const getConversationsForUser = useCallback(
     (userId, role) => {
       const list = []
