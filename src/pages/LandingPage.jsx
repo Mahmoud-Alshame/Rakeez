@@ -3,6 +3,7 @@ import { BRAND_FULL, BRAND_NAME, BRAND_TAGLINE } from '../constants/brand'
 import { Navbar } from '../components/layout/Navbar'
 import { useData } from '../contexts/dataContext'
 import { btnOutline, btnPrimary } from '../components/ui/FormField'
+import { useAuth } from '../contexts/authContext'
 
 const STEPS = [
   { n: '01', title: 'إنشاء الحساب', desc: 'سجّل كشركة ناشئة أو مورد وانتظر تفعيل المدير لحسابك.' },
@@ -41,7 +42,7 @@ const FAQ = [
 
 export default function LandingPage() {
   const { stats } = useData()
-
+  const { user } = useAuth()
   return (
     <div className="min-h-screen font-sans transition-colors duration-300 bg-surface text-stone-800 dark:bg-stone-950 dark:text-stone-100">
       <Navbar />
@@ -90,17 +91,17 @@ export default function LandingPage() {
       </section>
 
       <section id="stats" className="bg-white border-b border-stone-200 py-14 dark:border-stone-800 dark:bg-stone-900">
-        <div className="grid max-w-6xl gap-6 px-4 mx-auto sm:grid-cols-2 md:grid-cols-4 md:px-6">
-          {[
-            { label: 'مستخدمون مسجّلون', value: stats.usersCount || '—' },
-            { label: 'مناقصات نشطة', value: stats.activeTenders || '—' },
-            { label: 'عروض مقدّمة', value: stats.totalBids || '—' },
-            { label: 'تصنيفات', value: stats.categoriesCount || '—' },
-          ].map((s) => (
-            <StatCard key={s.label} {...s} />
-          ))}
-        </div>
-      </section>
+  <div className="grid max-w-6xl gap-6 px-4 mx-auto sm:grid-cols-2 md:grid-cols-4 md:px-6">
+    {[
+      { label: 'مستخدمون مسجّلون', value: stats.usersCount },
+      { label: 'مناقصات نشطة', value: stats.activeTenders },
+      { label: 'عروض مقدّمة', value: stats.totalBids },
+      { label: 'تصنيفات', value: stats.categoriesCount },
+    ].map((s) => (
+      <StatCard key={s.label} {...s} loggedIn={!!user} />
+    ))}
+  </div>
+</section>
 
       <section id="how" className="py-16 bg-surface dark:bg-stone-950">
         <div className="max-w-6xl px-4 mx-auto md:px-6">
@@ -156,10 +157,12 @@ export default function LandingPage() {
   )
 }
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, loggedIn }) {
   return (
     <div className="p-6 text-center border rounded-2xl border-stone-200 bg-surface-muted dark:border-stone-700 dark:bg-stone-800/60">
-      <p className="text-3xl font-bold text-primary dark:text-emerald-400">{value}</p>
+      <p className="text-3xl font-bold text-primary dark:text-emerald-400">
+        {loggedIn ? value : '🔒'}
+      </p>
       <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">{label}</p>
     </div>
   )
