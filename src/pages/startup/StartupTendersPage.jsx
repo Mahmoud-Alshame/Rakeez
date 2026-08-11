@@ -6,7 +6,14 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Modal } from '../../components/ui/Modal'
 import { SearchFilterBar, matchesSearch } from '../../components/ui/SearchFilterBar'
 import { FormField, btnOutline, btnPrimary, btnDangerSm, inputClass } from '../../components/ui/FormField'
-import { formatSYPRange, formatUSDRange, toCleanNumberString, formatThousands, toUSD } from '../../utils/currency'
+import {
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+  formatMoney,
+  formatMoneyRange,
+  getCurrencySymbol,
+  toCleanNumberString,
+} from '../../utils/currency'
 import { useAuth } from '../../contexts/authContext'
 import { useData } from '../../contexts/dataContext'
 import { generateTenderSuggestion } from '../../services/aiTender'
@@ -21,6 +28,7 @@ const emptyForm = {
   title: '',
   categoryId: '',
   description: '',
+  currency: DEFAULT_CURRENCY,
   budgetMin: '',
   budgetMax: '',
   deadline: '',
@@ -83,6 +91,7 @@ export default function StartupTendersPage() {
       title: t.title,
       categoryId: t.categoryId,
       description: t.description,
+      currency: t.currency || DEFAULT_CURRENCY,
       budgetMin: String(t.budgetMin),
       budgetMax: String(t.budgetMax),
       deadline: t.deadline?.slice(0, 10) || '',
@@ -98,6 +107,7 @@ export default function StartupTendersPage() {
       title: form.title.trim(),
       categoryId: form.categoryId,
       description: form.description.trim(),
+      currency: form.currency,
       budgetMin: Number(form.budgetMin),
       budgetMax: Number(form.budgetMax),
       deadline: form.deadline,
@@ -175,6 +185,7 @@ export default function StartupTendersPage() {
       title: aiSuggestion.title,
       categoryId: aiCategoryId,
       description: aiSuggestion.description,
+      currency: DEFAULT_CURRENCY,
       budgetMin: String(aiSuggestion.budgetMin),
       budgetMax: String(aiSuggestion.budgetMax),
       deadline: addDays(aiSuggestion.suggestedDays),
@@ -356,8 +367,7 @@ function StartupTendersPageContent(props) {
                   <tr key={t.id} className="border-b border-stone-50 dark:border-stone-800">
                     <td className="px-4 py-3 font-medium">{t.title}</td>
                     <td className="px-4 py-3 tabular-nums">
-                      <div>{formatSYPRange(t.budgetMin, t.budgetMax)}</div>
-                      <div className="text-xs text-stone-400">{formatUSDRange(t.budgetMin, t.budgetMax)}</div>
+                      {formatMoneyRange(t.budgetMin, t.budgetMax, t.currency)}
                     </td>
                     <td className="px-4 py-3">{t.deadline}</td>
                     <td className="px-4 py-3">
@@ -423,8 +433,31 @@ function StartupTendersPageContent(props) {
           <FormField label="الوصف" id="description">
             <textarea id="description" required rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={inputClass} disabled={submitting} />
           </FormField>
+          <FormField label="عملة المناقصة" id="currency">
+            <select
+              id="currency"
+              required
+              value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value })}
+              className={inputClass}
+              disabled={submitting || Boolean(editing)}
+            >
+              {Object.values(CURRENCIES).map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label} ({c.symbol})
+                </option>
+              ))}
+            </select>
+            {editing ? (
+              <p className="mt-1 text-xs text-stone-400">لا يمكن تغيير عملة مناقصة منشورة بالفعل.</p>
+            ) : (
+              <p className="mt-1 text-xs text-stone-400">
+                ستُقدَّم كل العروض على هذه المناقصة بنفس العملة المختارة.
+              </p>
+            )}
+          </FormField>
           <div className="grid grid-cols-2 gap-3">
-            <FormField label="الحد الأدنى للميزانية" id="budgetMin">
+            <FormField label={`الحد الأدنى للميزانية (${getCurrencySymbol(form.currency)})`} id="budgetMin">
               <input
                 id="budgetMin"
                 type="text"
@@ -436,12 +469,10 @@ function StartupTendersPageContent(props) {
                 disabled={submitting}
               />
               {form.budgetMin ? (
-                <p className="mt-1 text-xs text-stone-400">
-                  {formatThousands(form.budgetMin)} ل.س (~${toUSD(form.budgetMin)})
-                </p>
+                <p className="mt-1 text-xs text-stone-400">{formatMoney(form.budgetMin, form.currency)}</p>
               ) : null}
             </FormField>
-            <FormField label="الحد الأعلى" id="budgetMax">
+            <FormField label={`الحد الأعلى (${getCurrencySymbol(form.currency)})`} id="budgetMax">
               <input
                 id="budgetMax"
                 type="text"
@@ -453,9 +484,7 @@ function StartupTendersPageContent(props) {
                 disabled={submitting}
               />
               {form.budgetMax ? (
-                <p className="mt-1 text-xs text-stone-400">
-                  {formatThousands(form.budgetMax)} ل.س (~${toUSD(form.budgetMax)})
-                </p>
+                <p className="mt-1 text-xs text-stone-400">{formatMoney(form.budgetMax, form.currency)}</p>
               ) : null}
             </FormField>
           </div>
@@ -500,7 +529,8 @@ function StartupTendersPageContent(props) {
             {aiError ? <Alert variant="error">{aiError}</Alert> : null}
             <Alert variant="info">
               اكتب فكرة مختصرة عمّا تحتاجه، وسيقترح الذكاء الاصطناعي عنواناً ووصفاً احترافياً ونطاق
-              ميزانية وموعداً نهائياً مناسباً. راجع الاقتراح دائماً قبل النشر.
+              ميزانية وموعداً نهائياً مناسباً (بالليرة السورية افتراضياً، يمكنك تغيير العملة بعد الاعتماد
+              قبل النشر). راجع الاقتراح دائماً قبل النشر.
             </Alert>
             <FormField label="التصنيف" id="ai-category">
               <select
@@ -557,7 +587,7 @@ function AiSuggestionPreview({ suggestion, deadline }) {
   return (
     <div className="space-y-4">
       <Alert variant="success" title="تم توليد الاقتراح">
-        راجع التفاصيل التالية، ويمكنك تعديل أي حقل بعد الاعتماد قبل النشر النهائي.
+        راجع التفاصيل التالية، ويمكنك تعديل أي حقل (بما فيها العملة) بعد الاعتماد قبل النشر النهائي.
       </Alert>
       <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/50">
         <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">العنوان المقترح</p>
@@ -573,13 +603,13 @@ function AiSuggestionPreview({ suggestion, deadline }) {
         <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/50">
           <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">الحد الأدنى</p>
           <p className="mt-1 font-bold tabular-nums text-stone-900 dark:text-stone-100">
-            {suggestion.budgetMin.toLocaleString('ar-SY')} ل.س
+            {formatMoney(suggestion.budgetMin, DEFAULT_CURRENCY)}
           </p>
         </div>
         <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/50">
           <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">الحد الأعلى</p>
           <p className="mt-1 font-bold tabular-nums text-stone-900 dark:text-stone-100">
-            {suggestion.budgetMax.toLocaleString('ar-SY')} ل.س
+            {formatMoney(suggestion.budgetMax, DEFAULT_CURRENCY)}
           </p>
         </div>
         <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/50">

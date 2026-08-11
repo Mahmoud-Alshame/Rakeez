@@ -1,34 +1,78 @@
-/** العملة الأساسية للمنصة — الليرة السورية */
-export const CURRENCY_LABEL = 'ل.س'
-export const CURRENCY_CODE = 'SYP'
+/* ============================================================
+   العملات المدعومة بالمنصة — الشركة الناشئة تختار عملة كل مناقصة
+   وتُورَث تلقائياً لكل عرض يُقدَّم عليها
+   ============================================================ */
 
-/** سعر الصرف التقريبي: كم ليرة سورية = 1 دولار أمريكي (عدّله حسب الحاجة) */
-export const USD_RATE = 15000
+export const CURRENCIES = {
+  SYP: { code: 'SYP', label: 'الليرة السورية', symbol: 'ل.س' },
+  USD: { code: 'USD', label: 'الدولار الأمريكي', symbol: '$' },
+}
 
-const numberFormatter = new Intl.NumberFormat('ar-SY', {
+export const DEFAULT_CURRENCY = 'SYP'
+
+function getCurrencyMeta(currency) {
+  return CURRENCIES[currency] || CURRENCIES[DEFAULT_CURRENCY]
+}
+
+export function getCurrencySymbol(currency) {
+  return getCurrencyMeta(currency).symbol
+}
+
+export function getCurrencyLabel(currency) {
+  return getCurrencyMeta(currency).label
+}
+
+const arFormatter = new Intl.NumberFormat('ar-SY', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+  useGrouping: true,
+})
+
+const enFormatter = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
   useGrouping: true,
 })
 
 /**
- * تنسيق مبلغ بالليرة السورية مع فواصل آلاف واضحة.
+ * تنسيق مبلغ بأي عملة مدعومة مع فواصل آلاف واضحة ورمز العملة.
  * @param {number|string|null|undefined} amount
+ * @param {'SYP'|'USD'} [currency]
  * @param {{ withLabel?: boolean }} [options]
  */
-export function formatSYP(amount, options = {}) {
+export function formatMoney(amount, currency = DEFAULT_CURRENCY, options = {}) {
   const { withLabel = true } = options
   if (amount == null || amount === '' || Number.isNaN(Number(amount))) return '—'
-  const formatted = numberFormatter.format(Number(amount))
-  return withLabel ? `${formatted} ${CURRENCY_LABEL}` : formatted
+  const meta = getCurrencyMeta(currency)
+  const formatted =
+    currency === 'USD' ? enFormatter.format(Number(amount)) : arFormatter.format(Number(amount))
+  if (!withLabel) return formatted
+  return currency === 'USD' ? `${meta.symbol}${formatted}` : `${formatted} ${meta.symbol}`
 }
 
-/** نطاق ميزانية: من – إلى */
-export function formatSYPRange(min, max) {
+/** نطاق ميزانية: من – إلى، بنفس عملة المناقصة */
+export function formatMoneyRange(min, max, currency = DEFAULT_CURRENCY) {
   if (min == null && max == null) return '—'
-  const a = formatSYP(min, { withLabel: false })
-  const b = formatSYP(max, { withLabel: false })
-  return `${a} – ${b} ${CURRENCY_LABEL}`
+  const meta = getCurrencyMeta(currency)
+  const a = formatMoney(min, currency, { withLabel: false })
+  const b = formatMoney(max, currency, { withLabel: false })
+  return currency === 'USD' ? `${meta.symbol}${a} – ${meta.symbol}${b}` : `${a} – ${b} ${meta.symbol}`
+}
+
+/* ============================================================
+   دوال متوافقة مع الكود القديم (يُفضَّل استخدام formatMoney الجديدة،
+   بس هذول موجودين لأي مكان تاني بالمشروع لسا بيستدعي الاسم القديم)
+   ============================================================ */
+
+export const CURRENCY_LABEL = CURRENCIES.SYP.symbol
+export const CURRENCY_CODE = CURRENCIES.SYP.code
+
+export function formatSYP(amount, options = {}) {
+  return formatMoney(amount, 'SYP', options)
+}
+
+export function formatSYPRange(min, max) {
+  return formatMoneyRange(min, max, 'SYP')
 }
 
 /* ============================================================
@@ -68,34 +112,11 @@ export function toCleanNumberString(input) {
 }
 
 /**
- * تنسيق رقم بفواصل آلاف للعرض المباشر تحت حقل الإدخال (مو داخل الـ input نفسه).
+ * تنسيق رقم بفواصل آلاف للعرض المباشر (بدون رمز عملة)، مفيد لأي عرض عام.
  * مثال: "5000000" → "5,000,000"
  */
 export function formatThousands(value) {
   const num = Number(normalizeDigits(value))
   if (!value || Number.isNaN(num)) return ''
   return num.toLocaleString('en-US')
-}
-
-/* ============================================================
-   تحويل تقريبي بالدولار (للعرض فقط، لا يُستخدم للتخزين)
-   ============================================================ */
-
-/**
- * يحوّل مبلغاً بالليرة السورية إلى تقدير بالدولار الأمريكي، منسّق كنص.
- * @param {number|string|null|undefined} sypAmount
- */
-export function toUSD(sypAmount) {
-  const num = Number(normalizeDigits(sypAmount))
-  if (!sypAmount || Number.isNaN(num)) return ''
-  return (num / USD_RATE).toLocaleString('en-US', { maximumFractionDigits: 0 })
-}
-
-/** نطاق ميزانية تقريبي بالدولار: "$333 - $667" */
-export function formatUSDRange(min, max) {
-  if (min == null && max == null) return ''
-  const a = toUSD(min)
-  const b = toUSD(max)
-  if (!a && !b) return ''
-  return `$${a} - $${b}`
 }
