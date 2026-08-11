@@ -6,7 +6,7 @@ import { Modal } from '../../components/ui/Modal'
 import { TenderDetailContent } from '../../components/tenders/TenderDetailContent'
 import { SearchFilterBar, matchesSearch } from '../../components/ui/SearchFilterBar'
 import { FormField, btnOutline, btnPrimary, inputClass } from '../../components/ui/FormField'
-import { formatSYPRange } from '../../utils/currency'
+import { formatSYPRange, formatUSDRange, toCleanNumberString, formatThousands, toUSD } from '../../utils/currency'
 import { useAuth } from '../../contexts/authContext'
 import { useData } from '../../contexts/dataContext'
 
@@ -138,6 +138,7 @@ export default function BrowseTendersPage() {
                   <p className="mt-3 font-bold tabular-nums text-primary-dark dark:text-emerald-400">
                     {formatSYPRange(t.budgetMin, t.budgetMax)}
                   </p>
+                  <p className="text-xs text-stone-400">{formatUSDRange(t.budgetMin, t.budgetMax)}</p>
                   <p className="text-xs text-stone-400">آخر موعد: {t.deadline}</p>
                   <div className="mt-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
@@ -210,16 +211,22 @@ export default function BrowseTendersPage() {
             <FormField label="السعر المعروض (ل.س)" id="price">
               <input
                 id="price"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 required
-                min={0}
-                step={1000}
                 value={bidForm.price}
-                onChange={(e) => setBidForm({ ...bidForm, price: e.target.value })}
+                onChange={(e) =>
+                  setBidForm({ ...bidForm, price: toCleanNumberString(e.target.value) })
+                }
                 className={inputClass + ' tabular-nums'}
                 placeholder="مثال: 5000000"
                 disabled={submitting}
               />
+              {bidForm.price ? (
+                <p className="mt-1 text-xs text-stone-400">
+                  {formatThousands(bidForm.price)} ل.س (~${toUSD(bidForm.price)})
+                </p>
+              ) : null}
             </FormField>
             <FormField label="خطة تنفيذ المشروع" id="plan">
               <textarea

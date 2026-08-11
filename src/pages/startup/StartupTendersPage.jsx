@@ -6,7 +6,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Modal } from '../../components/ui/Modal'
 import { SearchFilterBar, matchesSearch } from '../../components/ui/SearchFilterBar'
 import { FormField, btnOutline, btnPrimary, btnDangerSm, inputClass } from '../../components/ui/FormField'
-import { formatSYPRange } from '../../utils/currency'
+import { formatSYPRange, formatUSDRange, toCleanNumberString, formatThousands, toUSD } from '../../utils/currency'
 import { useAuth } from '../../contexts/authContext'
 import { useData } from '../../contexts/dataContext'
 import { generateTenderSuggestion } from '../../services/aiTender'
@@ -356,7 +356,8 @@ function StartupTendersPageContent(props) {
                   <tr key={t.id} className="border-b border-stone-50 dark:border-stone-800">
                     <td className="px-4 py-3 font-medium">{t.title}</td>
                     <td className="px-4 py-3 tabular-nums">
-                      {formatSYPRange(t.budgetMin, t.budgetMax)}
+                      <div>{formatSYPRange(t.budgetMin, t.budgetMax)}</div>
+                      <div className="text-xs text-stone-400">{formatUSDRange(t.budgetMin, t.budgetMax)}</div>
                     </td>
                     <td className="px-4 py-3">{t.deadline}</td>
                     <td className="px-4 py-3">
@@ -424,10 +425,38 @@ function StartupTendersPageContent(props) {
           </FormField>
           <div className="grid grid-cols-2 gap-3">
             <FormField label="الحد الأدنى للميزانية" id="budgetMin">
-              <input id="budgetMin" type="number" required min={0} value={form.budgetMin} onChange={(e) => setForm({ ...form, budgetMin: e.target.value })} className={inputClass} disabled={submitting} />
+              <input
+                id="budgetMin"
+                type="text"
+                inputMode="numeric"
+                required
+                value={form.budgetMin}
+                onChange={(e) => setForm({ ...form, budgetMin: toCleanNumberString(e.target.value) })}
+                className={inputClass}
+                disabled={submitting}
+              />
+              {form.budgetMin ? (
+                <p className="mt-1 text-xs text-stone-400">
+                  {formatThousands(form.budgetMin)} ل.س (~${toUSD(form.budgetMin)})
+                </p>
+              ) : null}
             </FormField>
             <FormField label="الحد الأعلى" id="budgetMax">
-              <input id="budgetMax" type="number" required min={0} value={form.budgetMax} onChange={(e) => setForm({ ...form, budgetMax: e.target.value })} className={inputClass} disabled={submitting} />
+              <input
+                id="budgetMax"
+                type="text"
+                inputMode="numeric"
+                required
+                value={form.budgetMax}
+                onChange={(e) => setForm({ ...form, budgetMax: toCleanNumberString(e.target.value) })}
+                className={inputClass}
+                disabled={submitting}
+              />
+              {form.budgetMax ? (
+                <p className="mt-1 text-xs text-stone-400">
+                  {formatThousands(form.budgetMax)} ل.س (~${toUSD(form.budgetMax)})
+                </p>
+              ) : null}
             </FormField>
           </div>
           <FormField label="آخر موعد لتلقي العروض" id="deadline">
