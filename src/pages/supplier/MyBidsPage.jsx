@@ -5,7 +5,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Modal } from '../../components/ui/Modal'
 import { TenderDetailContent } from '../../components/tenders/TenderDetailContent'
 import { FormField, btnOutline, btnPrimary, btnDangerSm, inputClass } from '../../components/ui/FormField'
-import { formatSYP } from '../../utils/currency'
+import { formatSYP, toCleanNumberString, formatThousands, toUSD } from '../../utils/currency'
 import { useAuth } from '../../contexts/authContext'
 import { useData } from '../../contexts/dataContext'
 
@@ -121,7 +121,10 @@ export default function MyBidsPage() {
                         {getTender(b.tenderId)?.title || b.tenderId}
                       </button>
                     </td>
-                    <td className="px-4 py-3 tabular-nums">{formatSYP(b.price)}</td>
+                    <td className="px-4 py-3 tabular-nums">
+                      <div>{formatSYP(b.price)}</div>
+                      <div className="text-xs text-stone-400">~${toUSD(b.price)}</div>
+                    </td>
                     <td className="px-4 py-3">{b.deliveryDate}</td>
                     <td className="px-4 py-3">
                       <span
@@ -190,6 +193,9 @@ export default function MyBidsPage() {
                         <dt className="text-xs text-stone-500 dark:text-stone-400">السعر المعروض</dt>
                         <dd className="font-semibold tabular-nums text-stone-900 dark:text-stone-100">
                           {formatSYP(myBid.price)}
+                          <span className="mr-1 text-xs font-normal text-stone-400">
+                            (~${toUSD(myBid.price)})
+                          </span>
                         </dd>
                       </div>
                       <div>
@@ -240,15 +246,19 @@ export default function MyBidsPage() {
             <FormField label="السعر المعروض (ل.س)" id="edit-price">
               <input
                 id="edit-price"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 required
-                min={0}
-                step={1000}
                 value={bidForm.price}
-                onChange={(e) => setBidForm({ ...bidForm, price: e.target.value })}
+                onChange={(e) => setBidForm({ ...bidForm, price: toCleanNumberString(e.target.value) })}
                 className={inputClass + ' tabular-nums'}
                 disabled={submitting}
               />
+              {bidForm.price ? (
+                <p className="mt-1 text-xs text-stone-400">
+                  {formatThousands(bidForm.price)} ل.س (~${toUSD(bidForm.price)})
+                </p>
+              ) : null}
             </FormField>
             <FormField label="خطة تنفيذ المشروع" id="edit-plan">
               <textarea
