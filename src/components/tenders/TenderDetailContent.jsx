@@ -1,4 +1,4 @@
-import { formatSYPRange } from '../../utils/currency'
+import { formatMoneyRange } from '../../utils/currency'
 
 const TENDER_STATUS_LABELS = {
   active: 'نشطة',
@@ -30,7 +30,11 @@ export function TenderDetailContent({ tender, categories, owner }) {
           label="الحالة"
           value={TENDER_STATUS_LABELS[tender.status] || tender.status}
         />
-        <DetailItem label="الميزانية" value={formatSYPRange(tender.budgetMin, tender.budgetMax)} highlight />
+        <DetailItem
+          label="الميزانية"
+          value={formatMoneyRange(tender.budgetMin, tender.budgetMax, tender.currency)}
+          highlight
+        />
         <DetailItem label="آخر موعد للعروض" value={tender.deadline || '—'} />
         {tender.createdAt ? (
           <DetailItem label="تاريخ النشر" value={new Date(tender.createdAt).toLocaleDateString('ar-SY')} />

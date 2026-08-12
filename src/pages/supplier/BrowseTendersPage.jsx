@@ -6,7 +6,7 @@ import { Modal } from '../../components/ui/Modal'
 import { TenderDetailContent } from '../../components/tenders/TenderDetailContent'
 import { SearchFilterBar, matchesSearch } from '../../components/ui/SearchFilterBar'
 import { FormField, btnOutline, btnPrimary, inputClass } from '../../components/ui/FormField'
-import { formatSYPRange, formatUSDRange, toCleanNumberString, formatThousands, toUSD } from '../../utils/currency'
+import { formatMoney, formatMoneyRange, getCurrencySymbol, toCleanNumberString } from '../../utils/currency'
 import { useAuth } from '../../contexts/authContext'
 import { useData } from '../../contexts/dataContext'
 
@@ -72,6 +72,7 @@ export default function BrowseTendersPage() {
       await createBid({
         tenderId: bidTender.id,
         supplierId: user.uid,
+        currency: bidTender.currency, // يرث عملة المناقصة تلقائياً، غير قابل للتغيير من المورد
         price: Number(bidForm.price),
         plan: bidForm.plan.trim(),
         deliveryDate: bidForm.deliveryDate,
@@ -136,9 +137,8 @@ export default function BrowseTendersPage() {
                   <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">{owner?.companyName}</p>
                   <p className="mt-3 line-clamp-2 text-sm text-stone-600 dark:text-stone-400">{t.description}</p>
                   <p className="mt-3 font-bold tabular-nums text-primary-dark dark:text-emerald-400">
-                    {formatSYPRange(t.budgetMin, t.budgetMax)}
+                    {formatMoneyRange(t.budgetMin, t.budgetMax, t.currency)}
                   </p>
-                  <p className="text-xs text-stone-400">{formatUSDRange(t.budgetMin, t.budgetMax)}</p>
                   <p className="text-xs text-stone-400">آخر موعد: {t.deadline}</p>
                   <div className="mt-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
@@ -208,7 +208,7 @@ export default function BrowseTendersPage() {
           {error ? <Alert variant="error">{error}</Alert> : null}
           <p className="mb-3 text-sm font-medium">{bidTender?.title}</p>
           <form id="bid-form" onSubmit={submitBid} className="space-y-3">
-            <FormField label="السعر المعروض (ل.س)" id="price">
+            <FormField label={`السعر المعروض (${getCurrencySymbol(bidTender?.currency)})`} id="price">
               <input
                 id="price"
                 type="text"
@@ -224,9 +224,12 @@ export default function BrowseTendersPage() {
               />
               {bidForm.price ? (
                 <p className="mt-1 text-xs text-stone-400">
-                  {formatThousands(bidForm.price)} ل.س (~${toUSD(bidForm.price)})
+                  {formatMoney(bidForm.price, bidTender?.currency)}
                 </p>
               ) : null}
+              <p className="mt-1 text-xs text-stone-400">
+                هذا العرض يُقدَّم إلزامياً بنفس عملة المناقصة ({getCurrencySymbol(bidTender?.currency)}).
+              </p>
             </FormField>
             <FormField label="خطة تنفيذ المشروع" id="plan">
               <textarea
@@ -273,7 +276,7 @@ function BrowseTendersHeader() {
     <div>
       <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100">المناقصات المتاحة</h1>
       <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-        انقر على أي مناقصة لعرض التفاصيل. الميزانيات بالليرة السورية (ل.س).
+        انقر على أي مناقصة لعرض التفاصيل. كل مناقصة تظهر بعملتها الخاصة (ل.س أو $).
       </p>
     </div>
   )
